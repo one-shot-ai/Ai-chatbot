@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My AI Chatbot</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, #243b55, transparent 40%),
+                radial-gradient(circle at bottom right, #1e3a8a, transparent 40%),
+                #0f172a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 850px;
+            height: 90vh;
+            max-height: 850px;
+
+            background: rgba(15, 23, 42, 0.82);
+            backdrop-filter: blur(20px);
+
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.45);
+
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Header */
+
+        .header {
+            padding: 20px 24px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .bot-icon {
+            width: 48px;
+            height: 48px;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            font-size: 25px;
+
+            border-radius: 15px;
+
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.35);
+        }
+
+        .brand h1 {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+
+        .status {
+            font-size: 13px;
+            color: #86efac;
+
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+
+            background: #22c55e;
+            border-radius: 50%;
+
+            box-shadow: 0 0 10px #22c55e;
+        }
+
+        .clear-btn {
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+
+            color: #cbd5e1;
+
+            padding: 9px 13px;
+            border-radius: 10px;
+
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        /* Chat area */
+
+        .chat-box {
+            flex: 1;
+
+            padding: 25px;
+
+            overflow-y: auto;
+
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .welcome {
+            text-align: center;
+            margin: auto;
+            max-width: 500px;
+        }
+
+        .welcome-icon {
+            font-size: 55px;
+            margin-bottom: 15px;
+        }
+
+        .welcome h2 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .welcome p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+
+            max-width: 80%;
+
+            animation: appear 0.25s ease;
+        }
+
+        @keyframes appear {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.bot {
+            align-self: flex-start;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+
+            flex-shrink: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .user .avatar {
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
+        }
+
+        .bot .avatar {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        .bubble {
+            padding: 13px 16px;
+
+            line-height: 1.55;
+
+            border-radius: 18px;
+
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .user .bubble {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+
+            border-top-right-radius: 5px;
+        }
+
+        .bot .bubble {
+            background: rgba(255, 255, 255, 0.08);
+
+            border: 1px solid rgba(255, 255, 255, 0.07);
+
+            border-top-left-radius: 5px;
+
+            color: #e2e8f0;
+        }
+
+        /* Thinking */
+
+        .thinking {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .thinking span {
+            width: 7px;
+            height: 7px;
+
+            background: #a5b4fc;
+
+            border-radius: 50%;
+
+            animation: bounce 1.2s infinite;
+        }
+
+        .thinking span:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .thinking span:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-6px);
+            }
+        }
+
+        /* Input */
+
+        .input-area {
+            padding: 18px 20px;
+
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .input-wrapper {
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+
+            background: rgba(255, 255, 255, 0.07);
+
+            border: 1px solid rgba(255, 255, 255, 0.1);
+
+            border-radius: 16px;
+
+            padding: 8px 8px 8px 16px;
+
+            transition: 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: #6366f1;
+
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        #messageInput {
+            flex: 1;
+
+            border: none;
+            outline: none;
+
+            background: transparent;
+
+            color: white;
+
+            font-size: 15px;
+
+            padding: 10px 0;
+        }
+
+        #messageInput::placeholder {
+            color: #64748b;
+        }
+
+        #sendBtn {
+            width: 45px;
+            height: 45px;
+
+            border: none;
+
+            border-radius: 13px;
+
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+
+            color: white;
+
+            font-size: 20px;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        #sendBtn:hover {
+            transform: translateY(-2px);
+
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+        }
+
+        #sendBtn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer {
+            text-align: center;
+
+            font-size: 11px;
+
+            color: #64748b;
+
+            margin-top: 10px;
+        }
+
+        /* Scrollbar */
+
+        .chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
+
+        /* Mobile */
+
+        @media (max-width: 600px) {
+
+            body {
+                padding: 0;
+            }
+
+            .chat-container {
+                height: 100vh;
+                max-height: none;
+
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 15px;
+            }
+
+            .chat-box {
+                padding: 18px 14px;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .welcome h2 {
+                font-size: 24px;
+            }
+
+            .clear-btn {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="chat-container">
+
+    <!-- Header -->
+
+    <div class="header">
+
+        <div class="brand">
+
+            <div class="bot-icon">
+                🤖
+            </div>
+
+            <div>
+                <h1>My AI Chatbot</h1>
+
+                <div class="status">
+                    <span class="status-dot"></span>
+                    Online
+                </div>
+            </div>
+
+        </div>
+
+        <button class="clear-btn" onclick="clearChat()">
+            🗑 Clear
+        </button>
+
+    </div>
+
+
+    <!-- Chat -->
+
+    <div class="chat-box" id="chatBox">
+
+        <div class="welcome" id="welcome">
+
+            <div class="welcome-icon">
+                🤖
+            </div>
+
+            <h2>Hello! 👋</h2>
+
+            <p>
+                I'm your AI assistant.<br>
+                Ask me anything and let's chat!
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- Input -->
+
+    <div class="input-area">
+
+        <div class="input-wrapper">
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Type your message..."
+                autocomplete="off"
+            >
+
+            <button id="sendBtn" onclick="sendMessage()">
+                ➤
+            </button>
+
+        </div>
+
+        <div class="footer">
+            © 2026 Hasibul Hasan · Powered by Gemini
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    const input = document.getElementById("messageInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const chatBox = document.getElementById("chatBox");
+
+
+    // Enter key
+
+    input.addEventListener("keydown", function(event) {
+
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+
+    });
+
+
+    // Add message
+
+    function addMessage(text, type) {
+
+        const message = document.createElement("div");
+
+        message.className = `message ${type}`;
+
+        const avatar = document.createElement("div");
+
+        avatar.className = "avatar";
+
+        avatar.textContent = type === "user" ? "👤" : "🤖";
+
+
+        const bubble = document.createElement("div");
+
+        bubble.className = "bubble";
+
+        bubble.textContent = text;
+
+
+        message.appendChild(avatar);
+        message.appendChild(bubble);
+
+        chatBox.appendChild(message);
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+    }
+
+
+    // Thinking animation
+
+    function addThinking() {
+
+        const message = document.createElement("div");
+
+        message.className = "message bot";
+
+        message.id = "thinkingMessage";
+
+        message.innerHTML = `
+            <div class="avatar">🤖</div>
+
+            <div class="bubble">
+                <div class="thinking">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        `;
+
+        chatBox.appendChild(message);
+
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+    }
+
+
+    // Remove thinking
+
+    function removeThinking() {
+
+        const thinking = document.getElementById("thinkingMessage");
+
+        if (thinking) {
+            thinking.remove();
+        }
+
+    }
+
+
+    // Send message
+
+    async function sendMessage() {
+
+        const message = input.value.trim();
+
+        if (!message) return;
+
+
+        const welcome = document.getElementById("welcome");
+
+        if (welcome) {
+            welcome.remove();
+        }
+
+
+        addMessage(message, "user");
+
+        input.value = "";
+
+        input.focus();
+
+        sendBtn.disabled = true;
+
+        addThinking();
+
+
+        try {
+
+            const response = await fetch("/chat", {
+
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    message: message
+                })
+
+            });
+
+
+            const data = await response.json();
+
+            removeThinking();
+
+
+            addMessage(
+                data.reply || "Sorry, I couldn't generate a response.",
+                "bot"
+            );
+
+
+        } catch (error) {
+
+            removeThinking();
+
+            addMessage(
+                "⚠️ Unable to connect to the AI server. Please try again.",
+                "bot"
+            );
+
+        }
+
+
+        sendBtn.disabled = false;
+
+        input.focus();
+
+    }
+
+
+    // Clear chat
+
+    function clearChat() {
+
+        chatBox.innerHTML = `
+            <div class="welcome" id="welcome">
+
+                <div class="welcome-icon">
+                    🤖
+                </div>
+
+                <h2>Hello! 👋</h2>
+
+                <p>
+                    I'm your AI assistant.<br>
+                    Ask me anything and let's chat!
+                </p>
+
+            </div>
+        `;
+
+        input.focus();
+
+    }
+
+</script>
+
+</body>
+</html>
